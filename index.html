@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Super Claude</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="stage" data-state="title">
+    <canvas id="game" aria-label="Super Claude game view"></canvas>
+
+    <div id="hud" aria-live="off">
+      <span class="level" id="hud-level">1 · Forest Trail</span>
+      <span class="hearts" role="img" aria-label="3 of 3 lives">
+        <svg class="heart" viewBox="0 0 7 6" aria-hidden="true"><path d="M1 0h2v1h1v-1h2v1h1v2h-1v1h-1v1h-1v1h-1v-1h-1v-1h-1v-1h-1v-2h1z"/></svg>
+        <svg class="heart" viewBox="0 0 7 6" aria-hidden="true"><path d="M1 0h2v1h1v-1h2v1h1v2h-1v1h-1v1h-1v1h-1v-1h-1v-1h-1v-1h-1v-2h1z"/></svg>
+        <svg class="heart" viewBox="0 0 7 6" aria-hidden="true"><path d="M1 0h2v1h1v-1h2v1h1v2h-1v1h-1v1h-1v1h-1v-1h-1v-1h-1v-1h-1v-2h1z"/></svg>
+      </span>
+      <span class="sparks">SPARKS <span id="spark-count">0</span> / <span id="spark-total">8</span></span>
+      <span class="embers"><i class="ember-icon" aria-hidden="true"></i><span class="sr-only">Embers</span> <span id="ember-count">0</span></span>
+      <span class="shield" id="hud-shield" hidden><i class="shield-icon" aria-hidden="true"></i> SHIELD</span>
+    </div>
+
+    <div id="audio-ctl" role="group" aria-label="Sound">
+      <button id="mute-btn" type="button" aria-pressed="false" aria-label="Mute sound (M)">
+        <svg class="speaker" viewBox="0 0 9 7" aria-hidden="true">
+          <path class="body" d="M0 2h2v3h-2zM2 1h1v5h-1zM3 0h1v7h-1z"/>
+          <path class="waves" d="M5 2h1v3h-1zM7 1h1v5h-1z"/>
+          <path class="cross" d="M5 2h1v1h-1zM7 2h1v1h-1zM6 3h1v1h-1zM5 4h1v1h-1zM7 4h1v1h-1z"/>
+        </svg>
+        <span id="mute-label">SOUND</span>
+      </button>
+      <input id="volume" type="range" min="0" max="100" step="5" value="35" aria-label="Sound volume">
+      <span class="key-hint" aria-hidden="true">M</span>
+    </div>
+
+    <div id="note-wrap">
+      <p id="note" role="status" aria-live="polite"></p>
+    </div>
+
+    <section id="title-screen" class="screen">
+      <h1 class="sr-only">Super Claude</h1>
+      <button id="start-btn" class="paper-btn" type="button">Start game</button>
+      <p class="hint">Collect every spark, then reach the beacon. Stomp patrollers, mind the gaps, watch for falling stars.</p>
+      <p class="hint">A / D or ← → to move &nbsp;·&nbsp; Space, W or ↑ to jump (hold for a higher jump) &nbsp;·&nbsp; Esc or P to pause &nbsp;·&nbsp; M to mute</p>
+    </section>
+
+    <section id="levelclear-screen" class="panel">
+      <p class="paper-line" id="levelclear-title">Level complete</p>
+      <dl class="stats" id="levelclear-stats"></dl>
+      <button id="continue-btn" class="paper-btn" type="button">Continue</button>
+      <p class="hint">press Enter to continue</p>
+    </section>
+
+    <section id="complete-screen" class="panel">
+      <p class="paper-line">The sun is up. Thank you, Clawd.</p>
+      <p class="panel-sub">Super Claude · adventure complete</p>
+      <dl class="stats" id="complete-stats"></dl>
+      <button id="again-btn" class="paper-btn" type="button">Play again</button>
+      <p class="hint">press Enter to play again from the first level</p>
+    </section>
+
+    <section id="gameover-screen" class="panel">
+      <p class="paper-line">The night isn’t over yet.</p>
+      <p class="panel-sub" id="gameover-count"></p>
+      <div class="btn-row">
+        <button id="retry-btn" class="paper-btn" type="button">Retry level</button>
+        <button id="restart-btn" class="paper-btn quiet" type="button">Restart adventure</button>
+      </div>
+      <p class="hint">press Enter to retry this level</p>
+    </section>
+
+    <section id="pause-screen" class="panel">
+      <p class="paper-line">Paused</p>
+      <p class="panel-sub">Super Claude</p>
+      <button id="resume-btn" class="paper-btn" type="button">Resume</button>
+      <p class="hint">Esc or P to resume</p>
+      <p class="hint">A / D or ← → move &nbsp;·&nbsp; Space, W or ↑ jump &nbsp;·&nbsp; land on patrollers to stomp them &nbsp;·&nbsp; M mutes sound</p>
+    </section>
+  </main>
+
+  <script src="levels.js"></script>
+  <script src="audio.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
