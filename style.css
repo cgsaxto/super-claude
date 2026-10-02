@@ -1,0 +1,340 @@
+:root {
+  --bg: #080c13;
+  --scene: #0e1521;
+  --paper: #ece8dc;
+  --ink: #1f232b;
+  --dim: #aeb6c6;
+  --clawd: #ea6d41;
+  /* slightly uneven, hand-torn paper outline */
+  --torn: polygon(0.5% 7%, 27% 0%, 61% 4%, 99.5% 0%, 100% 54%, 99% 96%, 66% 100%, 31% 95%, 0.6% 100%, 0% 46%);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+body {
+  display: grid;
+  place-items: center;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color: var(--dim);
+}
+
+/* 16:9 stage, letterboxed to fit the window. All overlay sizes use cqw so
+   they scale together with the canvas. */
+#stage {
+  position: relative;
+  width: min(100vw, calc(100vh * 16 / 9));
+  aspect-ratio: 16 / 9;
+  container-type: size;
+  background: var(--scene);
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#game {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#hud {
+  position: absolute;
+  top: 2.6cqw;
+  left: 2.3cqw;
+  display: flex;
+  align-items: center;
+  gap: 1.7cqw;
+  font-size: max(0.92cqw, 8px);
+  letter-spacing: 0.14em;
+  line-height: 1;
+  white-space: nowrap;
+  transition: opacity 0.4s;
+}
+
+#hud .hearts {
+  display: flex;
+  gap: 0.45cqw;
+}
+
+#hud .heart {
+  display: block;
+  width: max(1.1cqw, 9px);
+  height: auto;
+  fill: var(--clawd);
+  shape-rendering: crispEdges;
+}
+
+#hud .heart.lost { fill: #2a3548; }
+
+#hud .level { color: #d5dbe7; text-transform: uppercase; }
+
+#hud .embers,
+#hud .shield {
+  display: flex;
+  align-items: center;
+  gap: 0.5cqw;
+}
+
+#hud [hidden] { display: none; }
+
+#hud .shield { color: #dfe7f5; }
+
+/* tiny pixel icons drawn with plain boxes */
+.ember-icon,
+.shield-icon {
+  display: inline-block;
+  width: max(0.7cqw, 6px);
+  height: max(0.7cqw, 6px);
+}
+
+.ember-icon { background: var(--clawd); transform: rotate(45deg); }
+
+.shield-icon {
+  background: #dfe7f5;
+  clip-path: polygon(0 0, 100% 0, 100% 55%, 50% 100%, 0 55%);
+}
+
+#stage[data-state="title"] #hud { opacity: 0; }
+
+/* sound control, top right: mute button, small volume slider, key hint */
+#audio-ctl {
+  position: absolute;
+  top: 1.9cqw;
+  right: 2.1cqw;
+  display: flex;
+  align-items: center;
+  gap: 0.8cqw;
+  font-size: max(0.82cqw, 8px);
+  letter-spacing: 0.14em;
+  line-height: 1;
+  color: var(--dim);
+}
+
+#mute-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.6cqw;
+  padding: 0.5cqw 0.7cqw;
+  border: 1px solid rgba(174, 182, 198, 0.28);
+  background: rgba(14, 21, 33, 0.6);
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+
+#mute-btn:hover,
+#mute-btn:focus-visible { color: #e6eaf2; border-color: var(--clawd); outline: none; }
+
+#mute-btn .speaker {
+  width: max(1.25cqw, 11px);
+  height: auto;
+  fill: var(--clawd);
+  shape-rendering: crispEdges;
+}
+
+#mute-btn .cross { display: none; fill: var(--dim); }
+#stage[data-sound="off"] #mute-btn .waves { display: none; }
+#stage[data-sound="off"] #mute-btn .cross { display: block; }
+#stage[data-sound="off"] #mute-btn .body { fill: var(--dim); }
+
+#volume {
+  width: max(5.4cqw, 44px);
+  height: max(1cqw, 10px);
+  margin: 0;
+  accent-color: var(--clawd);
+  cursor: pointer;
+}
+
+#audio-ctl .key-hint {
+  padding: 0.2cqw 0.4cqw;
+  border: 1px solid rgba(174, 182, 198, 0.28);
+  opacity: 0.8;
+}
+
+/* narrow stages: keep just the mute button so the HUD has room */
+@container (max-width: 760px) {
+  #mute-label,
+  #volume,
+  #audio-ctl .key-hint { display: none; }
+}
+
+#note-wrap {
+  position: absolute;
+  top: 21%;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  filter: drop-shadow(0 0.35cqw 0.7cqw rgba(0, 0, 0, 0.5));
+}
+
+#note {
+  margin: 0;
+  padding: 1.1cqw 2.4cqw 1.2cqw;
+  background: var(--paper);
+  color: var(--ink);
+  clip-path: var(--torn);
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+  font-size: max(1.5cqw, 10px);
+  white-space: nowrap;
+  transform: rotate(-1deg) translateY(-0.8cqw);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.9s ease, transform 0.9s ease, visibility 0s 0.9s;
+}
+
+#note.show {
+  opacity: 1;
+  visibility: visible;
+  transform: rotate(-1deg) translateY(0);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.screen {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 2.2%;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7cqw;
+  filter: drop-shadow(0 0.35cqw 0.7cqw rgba(0, 0, 0, 0.5));
+}
+
+#stage[data-state="title"] #title-screen { display: flex; }
+
+.screen .paper-btn { margin-bottom: 0.5cqw; }
+
+/* centred panels for game over and pause */
+.panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.3cqw;
+  filter: drop-shadow(0 0.35cqw 0.7cqw rgba(0, 0, 0, 0.5));
+}
+
+#stage[data-state="gameover"] #gameover-screen,
+#stage[data-state="levelclear"] #levelclear-screen,
+#stage[data-state="completed"] #complete-screen,
+#stage[data-state="paused"] #pause-screen { display: flex; }
+
+#stage[data-state="gameover"] #note-wrap,
+#stage[data-state="levelclear"] #note-wrap,
+#stage[data-state="completed"] #note-wrap,
+#stage[data-state="paused"] #note-wrap { display: none; }
+
+.btn-row {
+  display: flex;
+  gap: 1.6cqw;
+  align-items: center;
+}
+
+.paper-btn.quiet { background: #cfd3d6; }
+
+/* results: label / value pairs */
+.stats {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 0.35cqw 2.4cqw;
+  margin: 0 0 0.4cqw;
+  padding: 1cqw 1.8cqw;
+  background: rgba(14, 21, 33, 0.82);
+  color: #d5dbe7;
+  font-size: max(1.05cqw, 9px);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.stats dt { color: #aeb6c6; }
+.stats dd { margin: 0; text-align: right; }
+
+.paper-line {
+  margin: 0;
+  padding: 1.1cqw 2.6cqw 1.2cqw;
+  background: var(--paper);
+  color: var(--ink);
+  clip-path: var(--torn);
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+  font-size: max(1.9cqw, 12px);
+  white-space: nowrap;
+  transform: rotate(-1deg);
+}
+
+.panel-sub {
+  margin: 0 0 0.6cqw;
+  color: #d5dbe7;
+  font-size: max(1.05cqw, 9px);
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+
+.paper-btn {
+  padding: 0.85cqw 2.2cqw 0.95cqw;
+  border: 0;
+  background: var(--paper);
+  color: var(--ink);
+  clip-path: var(--torn);
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+  font-size: max(1.45cqw, 10px);
+  cursor: pointer;
+  transform: rotate(-1.2deg);
+}
+
+/* a single orange pixel ties the paper buttons to Clawd */
+.paper-btn::before {
+  content: "";
+  display: inline-block;
+  width: 0.62em;
+  height: 0.62em;
+  margin-right: 0.6em;
+  background: var(--clawd);
+}
+
+.paper-btn:hover { background: #fbf8ee; }
+.paper-btn:focus-visible {
+  background: #fbf8ee;
+  outline: none;
+  text-decoration: underline;
+  text-decoration-color: var(--clawd);
+  text-decoration-thickness: 0.12em;
+  text-underline-offset: 0.28em;
+}
+
+.hint {
+  margin: 0;
+  padding: 0.35cqw 1cqw;
+  background: rgba(14, 21, 33, 0.72);
+  color: #aeb6c6;
+  font-size: max(0.9cqw, 8px);
+  letter-spacing: 0.08em;
+  text-align: center;
+  max-width: 94cqw;
+  text-wrap: balance;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
