@@ -1,0 +1,12 @@
+{
+  "name": "super-claude",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A pixel platform adventure with original synthesized sound effects",
+  "license": "MIT",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/levels.test.cjs",
+    "check": "node --check game.js && node --check levels.js && node --check audio.js"
+  }
+}
